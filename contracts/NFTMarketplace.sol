@@ -84,7 +84,10 @@ contract NFTMarketplace is NFTTypes, ReentrancyGuard {
     require(_itemId > 0 && _itemId <= itemCount, "Item does not exist");
 
     // and its not already sold!
-    require(!_listingItem.sold, "Item already sold");
+    require(!_listingItem.sold, "Item is already sold");
+
+    // You cannot buy your own NFT!
+    require(_listingItem.seller != msg.sender, "You cannot buy your own NFT!");
 
     _;
   }

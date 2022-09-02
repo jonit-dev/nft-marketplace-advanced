@@ -97,6 +97,26 @@ describe("NFTMarketplace.sol", () => {
         await expect(purchase).to.be.revertedWith("You cannot send more than the total price");
       });
 
+      it("should fail if you try to buy your own NFT", async () => {
+        const sellerPurchase = nftMarketplace.connect(seller).buyItem(1, {
+          value: ToToken("1.01"),
+        });
+
+        await expect(sellerPurchase).to.be.revertedWith("You cannot buy your own NFT!");
+      });
+
+      it("should fail if the NFT is already sold", async () => {
+        await nftMarketplace.connect(investor).buyItem(1, {
+          value: ToToken("1.01"),
+        });
+
+        const purchase = nftMarketplace.connect(investor).buyItem(1, {
+          value: ToToken("1.01"),
+        });
+
+        await expect(purchase).to.be.revertedWith("Item is already sold");
+      });
+
       // it("should fail if an investor tries to buy an NFT but has insufficient funds", async () => {
       //   const purchase = nftMarketplace.connect(investor).buyItem(1, {
       //     value: ToToken("0.99"), // NFT price is 1 ETH...
