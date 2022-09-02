@@ -31,8 +31,11 @@ describe("NFTMarketplace.sol", () => {
 
   describe("Minting", () => {
     it("should successfully mint a token", async () => {
-      await nft.connect(deployer).mint("https://www.google.com");
-      await nft.connect(investor).mint("https://whatever.com");
+      const uri1 = "https://www.google.com";
+      const uri2 = "https://whatever.com";
+
+      await nft.connect(deployer).mint(uri1);
+      await nft.connect(investor).mint(uri2);
 
       const tokenCount = await nft.tokenCount();
 
@@ -44,6 +47,12 @@ describe("NFTMarketplace.sol", () => {
 
       expect(deployerBalance).to.equal(1);
       expect(investorBalance).to.equal(1);
+
+      const token1URI = await nft.tokenURI(1);
+      const token2URI = await nft.tokenURI(2);
+
+      expect(token1URI).to.equal(uri1);
+      expect(token2URI).to.equal(uri2);
     });
   });
 });
