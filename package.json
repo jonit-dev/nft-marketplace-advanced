@@ -12,7 +12,8 @@
     "console": "npx hardhat console",
     "console:ganache": "npx hardhat console --network localhost",
     "check": "npx hardhat check",
-    "format": "prettier --write . --loglevel silent"
+    "format": "prettier --write . --loglevel silent",
+    "network": "npx hardhat node"
   },
   "husky": {
     "hooks": {
