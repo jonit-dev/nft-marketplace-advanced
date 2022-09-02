@@ -27,9 +27,7 @@ contract NFTMarketplace is NFTTypes, ReentrancyGuard {
     IERC721 _nft,
     uint256 _tokenId,
     uint256 _price
-  ) external nonReentrant {
-    require(_price > 0, "Price must be greater than zero");
-
+  ) external nonReentrant isValidListing(_nft, _tokenId, _price) {
     itemCount++;
 
     // transfers the token to the smart contract
@@ -42,9 +40,8 @@ contract NFTMarketplace is NFTTypes, ReentrancyGuard {
 
   function buyItem(uint256 _itemId) external payable nonReentrant isPurchaseValid(_itemId) {
     uint256 _totalPrice = getTotalListingPrice(_itemId);
-    require(msg.value >= _totalPrice, "Insufficient funds");
 
-    require(msg.value == _totalPrice, "You cannot send more than the total price");
+    require(msg.value == _totalPrice, "You're trying to pay a price that's different from the listing price");
     // if we reached this point, it means the purchase is valid.
 
     ListingItem storage _listingItem = listingItems[_itemId];
@@ -88,6 +85,22 @@ contract NFTMarketplace is NFTTypes, ReentrancyGuard {
 
     // You cannot buy your own NFT!
     require(_listingItem.seller != msg.sender, "You cannot buy your own NFT!");
+
+    _;
+  }
+
+  modifier isValidListing(
+    IERC721 _nft,
+    uint256 _tokenId,
+    uint256 _price
+  ) {
+    // ensure that the token exists
+    require(_price > 0, "Price must be greater than 0");
+    require(_tokenId > 0, "Token ID must be greater than 0");
+    require(address(_nft) != address(0), "NFT address must be valid");
+
+    // ensure that the seller owns the token
+    require(_nft.ownerOf(_tokenId) == msg.sender, "You must own the token to list it");
 
     _;
   }

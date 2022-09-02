@@ -74,7 +74,28 @@ describe("NFTMarketplace.sol", () => {
     it("should fail if an user tries to list an NFT with price set to zero", async () => {
       const listItem = nftMarketplace.connect(seller).listItem(nft.address, 1, ToToken("0"));
 
-      await expect(listItem).to.be.revertedWith("Price must be greater than zero");
+      await expect(listItem).to.be.revertedWith("Price must be greater than 0");
+    });
+
+    it("should fail if the seller tries to list an NFT with token id of 0", async () => {
+      const listItem = nftMarketplace.connect(seller).listItem(nft.address, 0, ToToken("1"));
+
+      await expect(listItem).to.be.revertedWith("Token ID must be greater than 0");
+    });
+
+    it("should fail if we try to list a token with invalid address", async () => {
+      const listItem = nftMarketplace
+        .connect(seller)
+        .listItem("0x0000000000000000000000000000000000000000", 1, ToToken("1"));
+
+      await expect(listItem).to.be.revertedWith("NFT address must be valid");
+    });
+
+    it("should fail if you try to list a token that you don't own", async () => {
+      // remember that tokenId 1 is listed by the seller, already!
+      const listItem = nftMarketplace.connect(investor).listItem(nft.address, 1, ToToken("1"));
+
+      await expect(listItem).to.be.revertedWith("You must own the token to list it");
     });
   });
 
@@ -89,12 +110,22 @@ describe("NFTMarketplace.sol", () => {
         await expect(purchase).to.be.revertedWith("Item does not exist");
       });
 
-      it("should fail if you try to pay more money than the total price", async () => {
+      it("should fail if you try to pay MORE or LESS money than the total price", async () => {
         const purchase = nftMarketplace.connect(investor).buyItem(1, {
           value: ToToken("2"),
         });
 
-        await expect(purchase).to.be.revertedWith("You cannot send more than the total price");
+        await expect(purchase).to.be.revertedWith(
+          "You're trying to pay a price that's different from the listing price"
+        );
+
+        const purchase2 = nftMarketplace.connect(investor).buyItem(1, {
+          value: 0,
+        });
+
+        await expect(purchase2).to.be.revertedWith(
+          "You're trying to pay a price that's different from the listing price"
+        );
       });
 
       it("should fail if you try to buy your own NFT", async () => {
@@ -118,16 +149,20 @@ describe("NFTMarketplace.sol", () => {
       });
 
       // it("should fail if an investor tries to buy an NFT but has insufficient funds", async () => {
-      //   const purchase = nftMarketplace.connect(investor).buyItem(1, {
-      //     value: ToToken("0.99"), // NFT price is 1 ETH...
+      //   const insufficientMoneyPurchase = nftMarketplace.connect(investor).buyItem(1, {
+      //     value: ToToken("1"), // NFT price is 1 + 1% fee
       //   });
 
-      //   await expect(purchase).to.be.revertedWith("Insufficient funds");
+      //   await expect(insufficientMoneyPurchase).to.be.revertedWith("Insufficient funds");
       // });
     });
 
     describe("Purchase success", async () => {
       it("should update item as sold, pay the seller, transfer the NFT to the buyer, charge fees and emit a Bought event", async () => {
+        const sellerInitialBalance = await seller.getBalance();
+        const buyerInitialBalance = await investor.getBalance();
+        const feeAccountInitialBalance = await deployer.getBalance();
+
         const purchase = nftMarketplace.connect(investor).buyItem(1, {
           value: ToToken("1.01"), // NFT price is 1 ETH + fee!
         });
@@ -142,9 +177,20 @@ describe("NFTMarketplace.sol", () => {
         // check if item is sold
         expect(item.sold).to.equal(true);
 
-        // const sellerInitialBalance = await deployer.getBalance();
-        // const buyerInitialBalance = await investor.getBalance();
-        // const feeAccountInitialBalance = await deployer.getBalance();
+        const sellerFinalBalance = await seller.getBalance();
+        const buyerFinalBalance = await investor.getBalance();
+        const feeAccountFinalBalance = await deployer.getBalance();
+
+        // check if seller received the correct amount of ETH
+        expect(sellerFinalBalance.sub(sellerInitialBalance)).to.equal(ToToken("1"));
+
+        // check if marketplace received its fee
+        expect(feeAccountFinalBalance.sub(feeAccountInitialBalance)).to.equal(ToToken("0.01"));
+
+        // check if buyer received its NFT
+        expect(await nft.ownerOf(1)).to.equal(investor.address);
+
+        expect(buyerFinalBalance < buyerInitialBalance).to.equal(true);
       });
     });
   });
