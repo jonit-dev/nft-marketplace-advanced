@@ -12,4 +12,15 @@ contract NFTTypes {
     address payable seller;
     bool sold;
   }
+
+  event Listed(uint256 itemId, address indexed nft, uint256 tokenId, uint256 price, address indexed seller);
+
+  event Bought(
+    uint256 itemId,
+    address indexed nft,
+    uint256 tokenId,
+    uint256 price,
+    address indexed seller,
+    address indexed buyer
+  );
 }
