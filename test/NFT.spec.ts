@@ -3,7 +3,7 @@ import { expect } from "chai";
 
 import { ethers } from "hardhat";
 import { deployContract } from "../helpers/deployHelpers";
-import { NFT } from "../typechain";
+import { NFT } from "../typechain/NFT";
 
 describe("NFTMarketplace.sol", () => {
   let accounts: SignerWithAddress[], deployer: SignerWithAddress, investor: SignerWithAddress;

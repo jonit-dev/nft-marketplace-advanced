@@ -3,7 +3,7 @@
   "scripts": {
     "clean": "hardhat clean",
     "compile": "yarn clean && hardhat compile",
-    "test": "hardhat test --parallel",
+    "test": "hardhat test",
     "test:ganache-cli": "npx hardhat --network ganache test",
     "test:ganache-local": "npx hardhat --network localhost test",
     "deploy": "yarn compile && hardhat run scripts/deploy.ts",
