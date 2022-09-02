@@ -44,6 +44,7 @@ contract NFTMarketplace is NFTTypes, ReentrancyGuard {
     uint256 _totalPrice = getTotalListingPrice(_itemId);
     require(msg.value >= _totalPrice, "Insufficient funds");
 
+    require(msg.value == _totalPrice, "You cannot send more than the total price");
     // if we reached this point, it means the purchase is valid.
 
     ListingItem storage _listingItem = listingItems[_itemId];

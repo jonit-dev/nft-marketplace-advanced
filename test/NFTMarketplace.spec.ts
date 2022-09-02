@@ -89,6 +89,14 @@ describe("NFTMarketplace.sol", () => {
         await expect(purchase).to.be.revertedWith("Item does not exist");
       });
 
+      it("should fail if you try to pay more money than the total price", async () => {
+        const purchase = nftMarketplace.connect(investor).buyItem(1, {
+          value: ToToken("2"),
+        });
+
+        await expect(purchase).to.be.revertedWith("You cannot send more than the total price");
+      });
+
       // it("should fail if an investor tries to buy an NFT but has insufficient funds", async () => {
       //   const purchase = nftMarketplace.connect(investor).buyItem(1, {
       //     value: ToToken("0.99"), // NFT price is 1 ETH...
@@ -99,18 +107,24 @@ describe("NFTMarketplace.sol", () => {
     });
 
     describe("Purchase success", async () => {
-      it("should update item as sold, pay the seller, transfer the NFT to teh buyer, charge fees and emit a Bought event", async () => {
+      it("should update item as sold, pay the seller, transfer the NFT to the buyer, charge fees and emit a Bought event", async () => {
         const purchase = nftMarketplace.connect(investor).buyItem(1, {
-          value: ToToken("1.01"), // NFT price is 1 ETH...
+          value: ToToken("1.01"), // NFT price is 1 ETH + fee!
         });
 
+        // Bought event is emitted
         await expect(purchase)
           .to.emit(nftMarketplace, "Bought")
           .withArgs(1, nft.address, 1, ToToken("1"), seller.address, investor.address);
 
-        const sellerInitialBalance = await deployer.getBalance();
-        const buyerInitialBalance = await investor.getBalance();
-        const feeAccountInitialBalance = await deployer.getBalance();
+        const item = await nftMarketplace.listingItems(1);
+
+        // check if item is sold
+        expect(item.sold).to.equal(true);
+
+        // const sellerInitialBalance = await deployer.getBalance();
+        // const buyerInitialBalance = await investor.getBalance();
+        // const feeAccountInitialBalance = await deployer.getBalance();
       });
     });
   });
