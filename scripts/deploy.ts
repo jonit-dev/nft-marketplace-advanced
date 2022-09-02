@@ -6,6 +6,8 @@ import hre from "hardhat";
 
 import path from "path";
 import { deployContract } from "../helpers/deployHelpers";
+import { NFT } from "../typechain";
+import { NFTMarketplace } from "../typechain/NFTMarketplace";
 
 interface IABIOutput {
   contract: Contract;
@@ -15,14 +17,21 @@ interface IABIOutput {
 async function main() {
   //* 1) Add the deploy contract below
   //* 2) Then, just insert it into the abiOutputs array
-  // const daiToken = await deployContract<DAIToken>("DAIToken");
-  // const abiOutputs: IABIOutput[] = [
-  //   {
-  //     contract: daiToken,
-  //     name: "DAIToken",
-  //   }
-  // ];
-  // generateABI(abiOutputs);
+  const nftToken = await deployContract<NFT>("NFT", undefined, true);
+  const nftMarketplace = await deployContract<NFTMarketplace>("NFTMarketplace", {
+    args: [1],
+  });
+  const abiOutputs: IABIOutput[] = [
+    {
+      contract: nftToken,
+      name: "NFT",
+    },
+    {
+      contract: nftMarketplace,
+      name: "NFTMarketplace",
+    },
+  ];
+  generateABI(abiOutputs);
 }
 
 // We recommend this pattern to be able to use async/await everywhere
