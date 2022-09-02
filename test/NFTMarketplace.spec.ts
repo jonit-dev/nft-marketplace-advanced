@@ -11,7 +11,7 @@ describe("NFTMarketplace.sol", () => {
   let nftMarketplace: NFTMarketplace;
 
   // deploy contracts
-  before(async () => {
+  beforeEach(async () => {
     accounts = await ethers.getSigners();
     deployer = accounts[0];
     investor = accounts[1];
@@ -19,9 +19,16 @@ describe("NFTMarketplace.sol", () => {
     nftMarketplace = await deployContract("NFTMarketplace", { args: [1] }, false);
   });
 
-  it("should have an associated marketplace fee", async () => {
-    const fee = await nftMarketplace.feePercent();
+  describe("Fees", () => {
+    it("should have a fee account", async () => {
+      const feeAccount = await nftMarketplace.feeAccount();
+      expect(feeAccount).to.equal(deployer.address);
+    });
 
-    expect(fee).to.equal(1);
+    it("should have an associated marketplace fee", async () => {
+      const fee = await nftMarketplace.feePercent();
+
+      expect(fee).to.equal(1);
+    });
   });
 });
